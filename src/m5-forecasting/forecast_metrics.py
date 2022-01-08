@@ -346,7 +346,11 @@ if __name__ == "__main__":
 
     # Testing on custom darts metrics
     fai_weights = [0, 0.5, 0.3, 0.2]
-    fai_dfu(ts_data, dummy_pred_list, weighting_factors=fai_weights, ignore_incomplete_lags=True)
+    fai_value = fai_dfu(ts_data, dummy_pred_list, weighting_factors=fai_weights, ignore_incomplete_lags=False)
+    print(f"Forecast Accuracy Index (FAI) (without ignoring incomplete lags): {fai_value * 100:.2f}%")
+
+    fai_value = fai_dfu(ts_data, dummy_pred_list, weighting_factors=fai_weights, ignore_incomplete_lags=True)
+    print(f"Forecast Accuracy Index (FAI) (ignoring incomplete lags): {fai_value * 100:.2f}%")
 
 
 
