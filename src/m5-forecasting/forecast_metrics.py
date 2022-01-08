@@ -188,16 +188,43 @@ def _get_values_or_raise(series_a: TimeSeries,
 # =============================================================================
 # VDA 9000 METRICS
 # =============================================================================
-def fai_dfu(actual_series: TimeSeries,
-            pred_series: Sequence[TimeSeries],
-            weighting_factors: Sequence[float],
-            ignore_incomplete_lags: bool = True) -> Union[float, np.ndarray]:
+def fai_wts_dfu(actual_series: TimeSeries,
+                pred_series: Sequence[TimeSeries],
+                weighting_factors: Sequence[float],
+                ignore_incomplete_lags: bool = True) -> Union[float, np.ndarray]:
     """
-    Forecast Accuracy Index (FAI) metric calculation.
+    Forecast Accuracy Index (FAI) & Weighted Tracking Signal (WTS) metric calculation.
 
+    ----------
+    
+    FAI is calculated as follows (for each demand period, i.e., a timestamp/row of actual data):
+    1. If the demand (actual) is != 0, it is calculated as:
+
+        FAI = sum(weighting_factor_i * max(0, abs(forecast_lag_i - demand) / demand))
+
+        where i represents the forecast lag, i = 1, 2, ..., forecast_horizon
+
+    2. If the demand (actual) is == 0, it is calculated as:
+
+        FAI = sum([weighting_factor_i for i in range(1, forecast_horizon + 1) if forecast_lag_i != 0])
+
+    ----------
+    
+    WTS is calculated as follows (for each demand period, i.e., a timestamp/row of actual data):
+    1. If the sum of forecast lags are != 0, it is calculated as:
+    
+        WTS = sum(weighting_factor_i * (forecast_lag_i - demand)) / sum(weighting_factor_i * abs(forecast_lag_i - demand))
+
+    2. If the sum of forecast lags are == 0, it is calculated as:
+
+        WTS = 0
+
+    ----------
+    
     Note:
     1. This assumes that the predictions are of a complete series (e.g., if Prediction A has 12 predictions ahead, 
     Prediction B should have the same too).
+    2. Both metrics are combined under a single function since the calculations share the same processed data.
 
     Args:
         actual_series (TimeSeries): 
