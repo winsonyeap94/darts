@@ -1,0 +1,10 @@
+{
+    "logger": {
+      "path": "./logs/",
+      "filename": "m5-forecasting.log",
+      "level": "debug",
+      "rotation": "100 MB",
+      "retention": "1 months",
+      "format": "({time:YYYY-MM-DD HH:mm:ss.SSS}) {level: <8} | request id: {extra[request_id]} | {name}:{function} - {message}"
+    }
+  }
