@@ -1,3 +1,6 @@
+# Local cache files
+.DS_Store
+
 # Binary files
 *.csv
 *.zip
