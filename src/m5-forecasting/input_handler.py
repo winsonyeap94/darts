@@ -7,10 +7,13 @@ it in a separate script.
 
 import pandas as pd
 
+from base.decorators import log_time
+
 
 class InputHandler:
 
     @classmethod
+    @log_time
     def get_processed_data(cls, summarise_monthly=True):
         """
         Main data getter function, includes data preprocessing:
@@ -56,20 +59,20 @@ class InputHandler:
 
     @staticmethod
     def get_calendar_data():
-        calendar_df = pd.read_csv("./data/m5-forecasting-accuracy/calendar.csv")
+        calendar_df = pd.read_csv("../../data/m5-forecasting-accuracy/calendar.csv")
         calendar_df['date'] = pd.to_datetime(calendar_df['date'])
         return calendar_df
 
     @staticmethod
     def get_sell_prices_data():
-        sell_prices_df = pd.read_csv("./data/m5-forecasting-accuracy/sell_prices.csv")
+        sell_prices_df = pd.read_csv("../../data/m5-forecasting-accuracy/sell_prices.csv")
         return sell_prices_df
 
     @staticmethod
     def get_sales_data():
 
         # Raw Data
-        sales_df = pd.read_csv("./data/m5-forecasting-accuracy/sales_train_validation.csv")
+        sales_df = pd.read_csv("../../data/m5-forecasting-accuracy/sales_train_validation.csv")
 
         # Creating a primary key fr "item-store" level
         sales_df['item_store_id'] = sales_df['item_id'].astype(str) + '-' + sales_df['store_id'].astype(str)
