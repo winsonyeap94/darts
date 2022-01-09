@@ -259,16 +259,6 @@ def fai_wts_dfu(actual_series: TimeSeries,
         else:
             relevant_timestamps = relevant_timestamps.union(pred_ts.time_index)
 
-    # # Filter to ignore incomplete lags
-    # if ignore_incomplete_lags:
-    #     # We ignore timestamps where (Number of predictions) != (Number of weighting factors)
-    #     relevant_counts = np.unique(relevant_timestamps, return_counts=True)
-    #     relevant_counts = zip(relevant_counts[0], relevant_counts[1])
-    #     relevant_timestamps = list(filter(lambda x: x[1] >= len(weighting_factors), relevant_counts))
-    #     relevant_timestamps = [x[0] for x in relevant_timestamps]
-    # else:
-    #     relevant_timestamps = list(set(relevant_timestamps))
-
     # Only selecting timestamps which match with actual_series (for accuracy measurement purposes)
     relevant_timestamps = relevant_timestamps.intersection(actual_series.time_index)
 
@@ -317,6 +307,7 @@ def fai_wts_dfu(actual_series: TimeSeries,
     lag_columns = [f'lag_{x}' for x in range(1, len(weighting_factors) + 1)]
     fai_df = fai_df[['date', 'actual'] + lag_columns]
 
+    # ========== Forecast Accuracy Index (FAI) ==========
     # Calculating delta and abs_delta
     delta_columns = [f'delta_{x}' for x in range(1, len(weighting_factors) + 1)]
     abs_delta_columns = [f'abs_delta_{x}' for x in range(1, len(weighting_factors) + 1)]
@@ -345,10 +336,17 @@ def fai_wts_dfu(actual_series: TimeSeries,
         weighted_fai_df.loc[actual_is_zero_idx, 'fai'] = \
             (weighted_fai_df.loc[actual_is_zero_idx, lag_is_not_zero_columns] * weighting_factors).sum(axis=1)
 
-    # Returning average FAI over all timestamps
-    average_fai = weighted_fai_df['fai'].mean()
+    # ========== Weighted Tracking Signal (WTS) ==========
+    weighted_fai_df['wts'] = \
+        (weighted_fai_df[delta_columns] * weighting_factors).sum(axis=1) / \
+        (weighted_fai_df[abs_delta_columns] * weighting_factors).sum(axis=1)
 
-    return average_fai
+    # ========== Exporting Results ==========
+    # Returning average FAI & WTS over all timestamps
+    average_fai = weighted_fai_df['fai'].mean()
+    average_wts = weighted_fai_df['wts'].mean()
+
+    return average_fai, average_wts
 
 if __name__ == "__main__":
 
@@ -362,7 +360,7 @@ if __name__ == "__main__":
     dummy_pred_list = []
     for lag in range(0, n_lags):
         end_idx = len(ts_data) - lag
-        dummy_pred_list.append(ts_data[-12-lag:end_idx] + np.random.randint(5))
+        dummy_pred_list.append(ts_data[-12-lag:end_idx] + np.random.randint(-5, 5))
 
     # Passing them to an original darts metric (for testing purposes)
     # Note: For original darts metrics, both actual_series and pred_series must have the same length.
@@ -373,11 +371,13 @@ if __name__ == "__main__":
 
     # Testing on custom darts metrics
     fai_weights = [0, 0.5, 0.3, 0.2]
-    fai_value = fai_dfu(ts_data, dummy_pred_list, weighting_factors=fai_weights, ignore_incomplete_lags=False)
-    print(f"Forecast Accuracy Index (FAI) (without ignoring incomplete lags): {fai_value * 100:.2f}%")
+    avg_fai, avg_wts = fai_wts_dfu(ts_data, dummy_pred_list, weighting_factors=fai_weights, ignore_incomplete_lags=False)
+    print(f"Forecast Accuracy Index (FAI) (without ignoring incomplete lags): {avg_fai * 100:.2f}%")
+    print(f"Weighted Tracking Signal (WTS) (without ignoring incomplete lags): {avg_wts:.3f}")
 
-    fai_value = fai_dfu(ts_data, dummy_pred_list, weighting_factors=fai_weights, ignore_incomplete_lags=True)
-    print(f"Forecast Accuracy Index (FAI) (ignoring incomplete lags): {fai_value * 100:.2f}%")
+    avg_fai, avg_wts = fai_wts_dfu(ts_data, dummy_pred_list, weighting_factors=fai_weights, ignore_incomplete_lags=True)
+    print(f"Forecast Accuracy Index (FAI) (ignoring incomplete lags): {avg_fai * 100:.2f}%")
+    print(f"Weighted Tracking Signal (WTS) (ignoring incomplete lags): {avg_wts:.3f}")
 
 
 
