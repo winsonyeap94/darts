@@ -38,6 +38,9 @@ class InputHandler:
             final_sales_df['yearmonth'] = final_sales_df['date'].dt.to_period('M')
             final_sales_df = final_sales_df.groupby(['item_id', 'store_id', 'yearmonth']).sum().reset_index(drop=False)
 
+        # Converting 'yearmonth' datatype from Period to regular 'datetime'
+        final_sales_df['yearmonth'] = final_sales_df['yearmonth'].apply(lambda x: x.to_timestamp())
+
         return final_sales_df
 
     @classmethod
