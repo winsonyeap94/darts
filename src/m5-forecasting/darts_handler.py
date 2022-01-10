@@ -35,7 +35,7 @@ class DartsHandler:
 
     @log_time
     def fit_and_evaluate(self, model, data_df: pd.DataFrame, train_percent: float, 
-                         plot: bool=False, backtest: bool=False, **kwargs):
+                         plot: bool=False, backtest: bool=False):
         """
         Fits the Darts model to the training TimeSeries and evalautes it on the validation TimeSeries.
 
@@ -113,15 +113,14 @@ class DartsHandler:
                 data_df=data_df, start=backtest_start_time, plot=plot
             )
             fai_score, wts_score = self.backtest_results['fai'], self.backtest_results['wts']
-            
+
         else:
             fai_score, wts_score = None, None
-            
+
         return pred_validation_ts, fai_score, wts_score
-        
+
     @log_time
-    def run_backtest(self, data_df: pd.DataFrame, start: datetime=None, retrain: bool=True, plot: bool=False, 
-                     **kwargs):
+    def run_backtest(self, data_df: pd.DataFrame, start: datetime=None, retrain: bool=True):
         """
         Runs a backtest using the model fitted, given the data and start date.
 
@@ -131,7 +130,6 @@ class DartsHandler:
                 is determined based on model.min_train_series_length.
             retrain (bool, optional): Whether to retrain model on every backtest iteration. It is recommended to turn 
                 this off (False) if model training takes a long time. Defaults to True.
-            plot (bool, optional): Whether to plot results. Defaults to False.
 
         Returns:
             A dictionary containing the following key-value pairs:
@@ -184,9 +182,9 @@ class DartsHandler:
         }
 
         return results_dict
-        
+
     @log_time
-    def forecast(self, data_df: pd.DataFrame=None, forecast_horizon: int=None, plot: bool=False, **kwargs):
+    def forecast(self, data_df: pd.DataFrame=None, forecast_horizon: int=None):
         """
         Runs a forecast based on the Darts model trained.
 
@@ -255,18 +253,17 @@ class DartsHandler:
         return ts_dict
 
     @log_time
-    @staticmethod
-    def timeseries_to_pd(ts_dict: Dict[TimeSeries]):
+    def timeseries_to_pd(self, ts_dict: Dict[TimeSeries]):
         """
         Converts a list of TimeSeries objects into a pandas DataFrame.
 
         Args:
             ts_dict (Dict[TimeSeries]): Dictionary of TimeSeries objects in the form of 'var_name': TimeSeries.
         """
-        
+
         data_df = None
         for var_name, ts in ts_dict.items():
-            
+
             ts_df = pd.DataFrame({
                 self.datetime_var: ts.time_index,
                 var_name: ts.values().flatten()
@@ -276,7 +273,7 @@ class DartsHandler:
                 data_df = ts_df
             else:
                 data_df = data_df.merge(ts_df, on=self.datetime_var, how='outer')
-                
+
         return data_df
 
     @log_time
