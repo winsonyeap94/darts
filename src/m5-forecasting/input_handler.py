@@ -14,12 +14,16 @@ class InputHandler:
 
     @classmethod
     @log_time
-    def get_processed_data(cls, summarise_monthly=True):
+    def get_processed_data(cls, summarise_monthly=True, load_cached_data=False):
         """
         Main data getter function, includes data preprocessing:
         - Melting sales data into long table format
         - Adding calendar information to sales
         """
+
+        if load_cached_data:
+
+            final_sales_df = pd.read_feather("../../data/m5-forecasting-accuracy/final_sales_df.feather")
 
         sales_df, calendar_df, sell_prices_df = cls.get_all_data()
 
@@ -40,6 +44,8 @@ class InputHandler:
 
         # Converting 'yearmonth' datatype from Period to regular 'datetime'
         final_sales_df['yearmonth'] = final_sales_df['yearmonth'].apply(lambda x: x.to_timestamp())
+
+        # Saving a cache copy to speed up future runs
 
         return final_sales_df
 
